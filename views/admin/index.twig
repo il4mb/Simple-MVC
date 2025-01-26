@@ -1,0 +1,43 @@
+{% extends "base.twig" %}
+
+{% set listBook = database.select("daftar_buku") %}
+
+{% block body %}
+
+	<div class="container">
+		<h1>Selamat Datang Di Aplikasi Manajement Buku</h1>
+
+		<div class="border p-3">
+			<div class="d-flex align-items-center">
+				<button class="rounded-1 btn btn-sm btn-outline-secondary px-4">Add</button>
+				<h2 class="m-0 ms-3">Table Buku</h2>
+			</div>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>No</th>
+						<th>Nama</th>
+						<th>Penerbit</th>
+						<th>Deskripsi</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for i, book in listBook.rows %}
+						<tr>
+							<td>{{ i + 1 }}</td>
+							<td>{{book.judul}}</td>
+							<td>{{book.penerbit}}</td>
+							<td>{{book.deskripsi}}</td>
+							<td>
+								<button class="btn btn-sm btn-primary px-4">Edit</button>
+								<button class="btn btn-sm btn-danger px-4">Hapus</button>
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	
+{% endblock %}

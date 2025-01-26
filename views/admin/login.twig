@@ -1,0 +1,37 @@
+{% extends "base.twig" %}
+
+{% block content %}
+
+	<h1 class="position-absolute top-0 translate-x-50 mt-5">Masuk Ke Area Admin</h1>
+	<div>
+		<form class="card card-body p-4 shadow border-0" style="max-width: 400px;" id="login-form">
+			<h2 class="mb-3">Login</h2>
+			<div class="mb-3 row">
+				<label for="staticEmail" class="col-sm-1 col-form-label">
+					<i class="fa-solid fa-envelope fa-lg"></i>
+				</label>
+				<div class="col-sm">
+					<input type="email" class="form-control ms-2" name="email" id="staticEmail" placeholder="Masukan Email">
+				</div>
+			</div>
+			<div class="mb-3 row">
+				<label for="inputPassword" class="col-sm-1 col-form-label">
+					<i class="fa-solid fa-lock fa-lg"></i>
+				</label>
+				<div class="col-sm">
+					<input type="password" class="form-control ms-2" id="inputPassword" name="password" placeholder="Masukan katasandi">
+				</div>
+			</div>
+
+            <div class="text-center mt-3">
+                <button class="btn btn-outline-primary px-5" type="submit">Masuk</button>
+            </div>
+		</form>
+	</div>
+
+{% endblock %}
+
+{% block scripts %}
+	{{ parent() }}
+	<script src="{{'/assets/js/admin.login.js'|assets}}"></script>
+{% endblock %}

@@ -1,0 +1,21 @@
+{
+    "name": "il4mb/blocknode",
+    "description": "Html block node library",
+    "license": "MIT",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Il4mb\\BlockNode\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ilham b",
+            "email": "durianbohong@gmail.com"
+        }
+    ],
+    "minimum-stability": "alpha",
+    "require": {
+        "php": "^8.0"
+    }
+}

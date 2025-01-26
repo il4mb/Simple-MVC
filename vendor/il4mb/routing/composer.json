@@ -1,0 +1,21 @@
+{
+    "name": "il4mb/routing",
+    "description": "Simple Routing System",
+    "type": "library",
+    "require": {
+        "php": "^8.0"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Il4mb\\Routing\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ilham b",
+            "email": "durianbohong@gmail.com"
+        }
+    ],
+    "minimum-stability": "alpha"
+}
