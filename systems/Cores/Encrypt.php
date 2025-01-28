@@ -1,6 +1,6 @@
 <?php
 
-namespace Perpus\Cores;
+namespace Il4mb\Simvc\Systems\Cores;
 
 use RuntimeException;
 

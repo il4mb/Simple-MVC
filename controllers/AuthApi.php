@@ -9,6 +9,7 @@ use Il4mb\Routing\Http\Request;
 use Il4mb\Routing\Http\Response;
 use Il4mb\Routing\Map\Route;
 use Il4mb\Simvc\Systems\Cores\Database;
+use Il4mb\Simvc\Systems\Cores\Encrypt;
 use Throwable;
 
 class AuthApi
@@ -18,6 +19,7 @@ class AuthApi
     function auth(Request $request, Response $response)
     {
         try {
+            
             $response->setCode(Code::UNAUTHORIZED);
             $email    = $request->get("email");
             $password = $request->get("password");
@@ -31,14 +33,14 @@ class AuthApi
                     ["email" => $email]
                 )["rows"];
 
-                if (empty($users)) 
+                if (empty($users))
                     throw new Exception("Email tidak ditemukan!", 400);
-                if (!password_verify($password, $users[0]['password'])) 
+                if (!password_verify($password, $users[0]['password']))
                     throw new Exception("Kata sandi salah!", 400);
-                
+
                 $userId = $users[0]["id"];
-                setcookie("token", md5($userId), time() + 60 * 60 + 30, "/");
-                
+                setcookie("token", Encrypt::encrypt($userId), time() + 60 * 60 + 30, "/");
+
                 $response->setCode(Code::OK);
                 return [
                     "status"  => true,
@@ -47,6 +49,66 @@ class AuthApi
             }
         } catch (Throwable $t) {
             $response->setCode(Code::fromCode(intval($t->getCode())) ?? 500);
+            return [
+                "status"  => false,
+                "message" => $t->getMessage()
+            ];
+        }
+    }
+
+    #[Route(path: "/api/v1/auth/logout", method: Method::POST)]
+    function logout()
+    {
+        setcookie("token", "", 0, "/");
+        return [
+            "status"  => true,
+            "message" => "Logout berhasil"
+        ];
+    }
+
+    #[Route(path: "/api/v1/auth/register", method: Method::POST)]
+    function register(Request $req, Response $res)
+    {
+        try {
+            $email    = trim($req->get("email"));
+            $password = trim($req->get("password"));
+            $name     = trim($req->get("name"));
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception("Email tidak valid!", 400);
+            }
+            if (empty($email) || empty($password) || empty($name)) {
+                throw new Exception("Semua field harus diisi!", 400);
+            }
+            if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
+                throw new Exception("Password harus memiliki minimal 8 karakter, dengan setidaknya satu huruf dan satu angka.", 400);
+            }
+
+            $db = Database::getInstance();
+            $existingUser = $db->select(
+                table: "users",
+                conditions: ["email" => $email]
+            );
+            if (!empty($existingUser["rows"])) {
+                throw new Exception("Email sudah terdaftar!", 409);
+            }
+
+            $db->insert(
+                table: "users",
+                params: [
+                    "email"    => $email,
+                    "password" => password_hash($password, PASSWORD_DEFAULT),
+                    "name"     => $name
+                ]
+            );
+
+            $res->setCode(201);
+            return [
+                "status"  => true,
+                "message" => "Register berhasil"
+            ];
+        } catch (Throwable $t) {
+            $res->setCode(Code::fromCode(intval($t->getCode())) ?? 500);
             return [
                 "status"  => false,
                 "message" => $t->getMessage()

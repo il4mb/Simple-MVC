@@ -17,7 +17,7 @@
         }
     ],
     "require": {
-        "php": "^8.3",
+        "php": "^8.0",
         "il4mb/blocknode": "@dev",
         "il4mb/routing": "@dev",
         "twig/twig": "3.3",

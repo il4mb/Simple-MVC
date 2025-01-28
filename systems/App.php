@@ -3,6 +3,7 @@
 namespace Il4mb\Simvc\Systems;
 
 use Il4mb\BlockNode\Node;
+use Il4mb\Routing\Http\Code;
 use Il4mb\Routing\Http\Request;
 use Il4mb\Routing\Router;
 
@@ -56,6 +57,13 @@ class App extends Cather
         $content = $this->response->getContent();
         if ($content instanceof Node) {
             $this->response->setContent($content->render());
+        }
+        if (empty($content) && $this->response->getCode() == Code::NOT_FOUND && $this->request->isAjax()) {
+            $this->response->setCode(404);
+            $this->response->setContent([
+                "status" => false,
+                "message" => "Halaman tidak ditemukan!"
+            ]);
         }
         return $this->response->send();
     }

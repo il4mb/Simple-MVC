@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6853dbb0faa3b8090b9b4f93cb8a8592",
+    "content-hash": "1d07fe9f27ddda260a8eee68bcbafc20",
     "packages": [
         {
             "name": "il4mb/blocknode",
@@ -53,12 +53,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/il4mb/Routing.git",
-                "reference": "ee54f796dca4e024a3d9c60642714507f2258747"
+                "reference": "10b94bf520371554ea5bd52d9584acc9bb25e14f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/il4mb/Routing/zipball/ee54f796dca4e024a3d9c60642714507f2258747",
-                "reference": "ee54f796dca4e024a3d9c60642714507f2258747",
+                "url": "https://api.github.com/repos/il4mb/Routing/zipball/10b94bf520371554ea5bd52d9584acc9bb25e14f",
+                "reference": "10b94bf520371554ea5bd52d9584acc9bb25e14f",
                 "shasum": ""
             },
             "require": {
@@ -86,7 +86,7 @@
                 "issues": "https://github.com/il4mb/Routing/issues",
                 "source": "https://github.com/il4mb/Routing/tree/main"
             },
-            "time": "2025-01-26T12:11:55+00:00"
+            "time": "2025-01-28T07:40:24+00:00"
         },
         {
             "name": "symfony/filesystem",
@@ -400,7 +400,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.3"
+        "php": "^8.0"
     },
     "platform-dev": [],
     "plugin-api-version": "2.6.0"

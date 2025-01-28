@@ -15,6 +15,8 @@ foreach ($env as $key => $val) {
     $_ENV["APP_" . strtoupper($key)] = $val;
 }
 
+error_log(print_r(getallheaders(), 1));
+
 $app = new App();
 $app->loadController(__DIR__ . "/controllers");
 $output =  $app->render();

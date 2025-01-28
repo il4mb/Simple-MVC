@@ -8,6 +8,7 @@ use Il4mb\Routing\Http\Method;
 use Il4mb\Routing\Http\Request;
 use Il4mb\Routing\Http\Response;
 use Il4mb\Routing\Middlewares\Middleware;
+use Il4mb\Simvc\Systems\Cores\Encrypt;
 use Il4mb\Simvc\Systems\View;
 
 class AuthMiddleware  implements Middleware
@@ -16,7 +17,7 @@ class AuthMiddleware  implements Middleware
     function handle(Request $request, Closure $next): Response
     {
 
-        $token = $request->getCookie('token');
+        $token = Encrypt::decrypt($request->getCookie('token') ?? "");
         if (empty($token)) {
 
             if ($request->method == Method::GET) {
@@ -33,6 +34,7 @@ class AuthMiddleware  implements Middleware
                 "message" => "Invalid credentials"
             ], Code::UNAUTHORIZED);
         }
+        $request->set("uid", $token);
         return $next($request);
     }
 }

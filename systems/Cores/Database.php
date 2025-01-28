@@ -219,9 +219,7 @@ class Database extends PDO
         foreach ($params as $key => $value) {
             $stmt->bindValue(":{$key}", $value);
         }
-        $stmt->execute();
-
-        return (int) $this->lastInsertId();
+        return $stmt->execute();
     }
 
 
