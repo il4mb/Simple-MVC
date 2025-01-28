@@ -20,29 +20,19 @@ class InputValidator implements Middleware
 
             $title     = $request->get("judul");
             $description = $request->get("deskripsi");
-            $publisher = $request->get("penerbit");
-            $author    = $request->get("penulis");
-            $tanggalTerbit = $request->get("tanggal_terbit");
-            $link = $request->get("link");
+            $topik = $request->get("topik");
 
             if (empty($title) || strlen(trim($title)) < 3) {
                 throw new Exception("Judul tidak boleh kosong", 400);
             }
-            if (empty($link) || !filter_var($link, FILTER_VALIDATE_URL)) {
-                throw new Exception("Link tidak valid", 400);
-            }
-            if (empty($publisher) || strlen(trim($publisher)) < 3) {
-                throw new Exception("Penerbit tidak boleh kosong", 400);
-            }
-            if (empty($author) || strlen(trim($author)) < 3) {
-                throw new Exception("Penulis tidak boleh kosong", 400);
+
+            if (empty($topik) || strlen(trim($topik)) < 3) {
+                throw new Exception("Topik tidak boleh kosong", 400);
             }
             if (empty($description) || strlen(trim($description)) < 3) {
                 throw new Exception("Deskripsi tidak boleh kosong", 400);
             }
-            if (empty($tanggalTerbit)) {
-                throw new Exception("Tanggal terbit tidak boleh kosong", 400);
-            }
+
 
             return $next($request);
         } catch (Throwable $t) {

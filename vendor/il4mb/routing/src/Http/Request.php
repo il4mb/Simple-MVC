@@ -44,9 +44,41 @@ class Request
         foreach ($_COOKIE as $key => $value) {
             $this->props["__cookies"][$key] = $value;
         }
+
         foreach ($_FILES as $key => $value) {
-            $this->props["__files"][$key] = $value;
+            // Check if multiple files are uploaded for the same field
+            if (is_array($value['name'])) {
+                // Iterate over the array of files and handle each one
+                foreach ($value['name'] as $index => $filename) {
+                    $fileData = [
+                        'type' => $value['type'][$index],
+                        'name' => $filename,
+                        'tmp_name' => $value['tmp_name'][$index],
+                        'size' => $value['size'][$index],
+                        'error' => $value['error'][$index] ?? null
+                    ];
+
+                    // Assign the file data to the __files array
+                    if (!isset($this->props["__files"][$key])) {
+                        $this->props["__files"][$key] = [];
+                    }
+                    $this->props["__files"][$key][] = $fileData;
+                }
+            } else {
+                // Single file upload case
+                $fileData = [
+                    'type' => $value['type'],
+                    'name' => $value['name'],
+                    'tmp_name' => $value['tmp_name'],
+                    'size' => $value['size'],
+                    'error' => $value['error'] ?? null
+                ];
+
+                // Assign the file data to the __files array
+                $this->props["__files"][$key] = $fileData;
+            }
         }
+
 
         // clear state
         $_GET    = [];
@@ -106,7 +138,10 @@ class Request
         return $this->props["__queries"][$name] ?? null;
     }
 
-    function getFile(string $name)
+    /**
+     * @return array<string>|array<string, array<string>>|null
+     */
+    function getFile(string $name): mixed
     {
         return $this->props["__files"][$name] ?? null;
     }
@@ -152,11 +187,12 @@ class Request
             if ($boundary) {
                 $parts = explode('--' . $boundary, $rawBody);
                 foreach ($parts as $part) {
-
                     if (empty(trim($part)) || $part === '--') continue;
+
                     $block = explode("\r\n\r\n", $part, 2);
                     if (empty($block) || count($block) < 2) continue;
                     [$rawHeaders, $body] = $block;
+
                     $rawHeaders = explode("\r\n", $rawHeaders);
                     $headers = [];
                     foreach ($rawHeaders as $header) {
@@ -165,22 +201,59 @@ class Request
                             $headers[trim($key)] = trim($value);
                         }
                     }
+
                     if (isset($headers['Content-Disposition'])) {
+
                         preg_match('/name="([^"]+)"/', $headers['Content-Disposition'], $nameMatch);
                         preg_match('/filename="([^"]+)"/', $headers['Content-Disposition'], $fileMatch);
+
                         $name = $nameMatch[1] ?? null;
                         $filename = $fileMatch[1] ?? null;
+                        $isArray = false;
+
+                        preg_match("/(.*?)\[.*?\]/", $name, $arrayMatch);
+                        if (isset($arrayMatch[1])) {
+                            $name = $arrayMatch[1];
+                            $isArray = true;
+                        }
+
+
                         if ($filename) {
                             $tempFilePath = tempnam(sys_get_temp_dir(), uniqid('upload_', true));
                             file_put_contents($tempFilePath, $body);
-                            $this->props["__files"][$name] = [
+
+                            $fileData = [
                                 'type' => $headers['Content-Type'] ?? 'application/octet-stream',
                                 'name' => $filename,
                                 'tmp_name' => $tempFilePath,
                                 'size' => strlen($body),
+                                'error' => null,
                             ];
+
+                            if ($isArray) {
+
+                                error_log(($isArray ? "Array" : "Single") . " " . $name);
+                                error_log(print_r($fileData, 1));
+
+                                // Handle multiple files with the same name
+                                if (!isset($this->props["__files"][$name])) {
+                                    $this->props["__files"][$name] = [];
+                                }
+                                $this->props["__files"][$name][] = $fileData;
+                            } else {
+                                $this->props["__files"][$name] = $fileData;
+                            }
                         } else {
-                            $this->props["__body"][$name] = trim($body);
+                            // Handle form fields
+                            if (isset($this->props["__body"][$name])) {
+                                // Convert to an array if multiple values exist
+                                if (!is_array($this->props["__body"][$name])) {
+                                    $this->props["__body"][$name] = [$this->props["__body"][$name]];
+                                }
+                                $this->props["__body"][$name][] = trim($body);
+                            } else {
+                                $this->props["__body"][$name] = trim($body);
+                            }
                         }
                     }
                 }

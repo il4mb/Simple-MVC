@@ -44,6 +44,12 @@ class BookApi
         return null;
     }
 
+    private function getLinkablePath($file)
+    {
+        $root = preg_replace("/\\\\/m", "/", $_SERVER['DOCUMENT_ROOT']);
+        return Path::join(str_replace($root, "", preg_replace("/\\\\/m", "/", $file)));
+    }
+
     #[Route(path: "/api/" . self::VERSION . "/books", method: Method::GET)]
     function index(Request $req, Response $res)
     {
@@ -108,6 +114,12 @@ class BookApi
             $rows = array_map(function ($item) {
                 $item['image'] = $this->getBukuImage($item['id']);
                 $item['is_fav'] = $item['is_fav'] == true;
+                $item['attachments'] = array_map(function ($path) {
+                    $protocol = strpos(strtolower($_SERVER['SERVER_PROTOCOL']), 'https') === FALSE ? 'http' : 'https';
+                    $port     = $_SERVER['SERVER_PORT'];
+                    $hostLink = $protocol . '://' . $_SERVER['HTTP_HOST'] . (empty($port) || $port === '80' ? '' : ':' . $port);
+                    return Path::join($hostLink, $path);
+                }, json_decode($item['attachments'], true) ?? []);
                 return $item;
             }, $list_buku["rows"]);
 
@@ -141,42 +153,74 @@ class BookApi
     function tambah(Request $req, Response $res)
     {
         try {
+
             $uid       = $req->get("uid");
             $judul     = $req->get("judul");
-            $penerbit  = $req->get("penerbit");
-            $penulis   = $req->get("penulis");
             $deskripsi = $req->get("deskripsi");
-            $tanggalTerbit = $req->get("tanggal_terbit");
-            $image     = $req->getFile("gambar");
+            $topik     = $req->get("topik");
             $link      = $req->get("link");
-
+            $attachments = $req->getFile("attachments");
+            $image     = $req->getFile("gambar");
 
             $db = Database::getInstance();
             if ($db->insert(
                 table: "daftar_buku",
                 params: [
                     "judul" => $judul,
-                    "penerbit" => $penerbit,
+                    "topik" => $topik,
                     "deskripsi" => $deskripsi,
-                    "penulis" => $penulis,
-                    "tanggal_terbit" => date("Y-m-d", strtotime($tanggalTerbit)),
                     "user_id" => $uid,
                     "link" => $link
                 ]
             )) {
 
                 $id = $db->lastInsertId();
-                if (!empty($image)) {
-                    $temp = $image['tmp_name'];
-                    $target = realpath($this->uploadPath) . "/$id.webp";
-                    if (!file_exists($this->uploadPath)) {
-                        mkdir($this->uploadPath);
+
+                if (!empty($attachments)) {
+                    $targetPath = realpath($this->uploadPath) . "/attachments/$id";
+                    if (!file_exists($targetPath)) {
+                        mkdir($targetPath, 0777, true);
                     }
+
+                    $linkPaths = [];
+                    foreach ($attachments as $file) {
+
+                        if ($file['error']) {
+                            throw new Exception($file['error']);
+                        }
+                        $temp = $file['tmp_name'] ?? false;
+                        if (!$temp) throw new Exception("Gagal mengupload file $file[name]!");
+                        $target = $targetPath . "/$file[name]";
+                        if (is_uploaded_file($temp)) {
+                            move_uploaded_file($temp, $target);
+                        } else {
+                            rename($temp, $target);
+                        }
+
+                        chmod($target, 0777);
+                        $linkPaths[] = $this->getLinkablePath($target);
+                    }
+                    $db->update(
+                        table: "daftar_buku",
+                        params: [
+                            "attachments" => json_encode($linkPaths)
+                        ],
+                        conditions: [
+                            "id" => $id
+                        ]
+                    );
+                }
+
+                if (!empty($image)) {
+                    $temp = $image['tmp_name'] ?? false;
+                    if (!$temp) throw new Exception("Gagal mengupload file $file[name]!");
+                    $target = realpath($this->uploadPath) . "/$id.webp";
                     if (is_uploaded_file($temp)) {
                         move_uploaded_file($temp, $target);
                     } else {
                         rename($temp, $target);
                     }
+                    chmod($target, 0777);
                 }
 
                 $res->setCode(Code::CREATED);
@@ -187,10 +231,7 @@ class BookApi
                         "id" => $id,
                         "image" => $this->getBukuImage($id),
                         "judul" => $judul,
-                        "penerbit" => $penerbit,
-                        "penulis" => $penulis,
                         "deskripsi" => $deskripsi,
-                        "tanggal_terbit" => date("Y-m-d", strtotime($tanggalTerbit))
 
                     ]
                 ];
@@ -245,7 +286,13 @@ class BookApi
             $row = $fetch["rows"][0];
             $row['image'] = $this->getBukuImage($row['id']);
             $row['is_fav'] = $row['is_fav'] == true;
-            $row['user'] = json_decode($row['user']);
+            $row['user'] = json_decode($row['user'], true);
+            $row['attachments'] = array_map(function ($path) {
+                $protocol = strpos(strtolower($_SERVER['SERVER_PROTOCOL']), 'https') === FALSE ? 'http' : 'https';
+                $port     = $_SERVER['SERVER_PORT'];
+                $hostLink = $protocol . '://' . $_SERVER['HTTP_HOST'] . (empty($port) || $port === '80' ? '' : ':' . $port);
+                return Path::join($hostLink, $path);
+            }, json_decode($row['attachments'], true) ?? []);
 
             return [
                 "status" => true,
@@ -276,23 +323,53 @@ class BookApi
 
             $uid       = $req->get("uid");
             $judul     = $req->get("judul");
-            $penerbit  = $req->get("penerbit");
-            $penulis   = $req->get("penulis");
+            $topik     = $req->get("topik");
             $deskripsi = $req->get("deskripsi");
-            $tanggalTerbit = $req->get("tanggal_terbit");
             $image     = $req->getFile("gambar");
             $link      = $req->get("link");
+            $currentsAttachment = array_values(
+                array_map(
+                    fn($link) => parse_url($link, PHP_URL_PATH),
+                    json_decode($req->get("currents_attachments") ?? "[]", true) ?? []
+                )
+            );
+            $attachments = $req->getFile("attachments");
+
+            if (!empty($attachments)) {
+                $targetPath = realpath($this->uploadPath) . "/attachments/$docId";
+                if (!file_exists($targetPath)) {
+                    mkdir($targetPath, 0777, true);
+                }
+
+                foreach ($attachments as $file) {
+
+                    if ($file['error']) {
+                        throw new Exception($file['error']);
+                    }
+                    $temp = $file['tmp_name'] ?? false;
+                    if (!$temp) throw new Exception("Gagal mengupload file $file[name]!");
+                    $target = $targetPath . "/$file[name]";
+                    if (is_uploaded_file($temp)) {
+                        move_uploaded_file($temp, $target);
+                    } else {
+                        rename($temp, $target);
+                    }
+
+                    chmod($target, 0777);
+                    $currentsAttachment[] = $this->getLinkablePath($target);
+                }
+            }
 
             $db = Database::getInstance();
             $db->update(
                 table: "daftar_buku",
                 params: [
                     "judul" => $judul,
-                    "penerbit" => $penerbit,
+                    "topik" => $topik,
                     "deskripsi" => $deskripsi,
-                    "penulis" => $penulis,
-                    "tanggal_terbit" => date("Y-m-d", strtotime($tanggalTerbit)),
-                    "link" => $link
+                    "user_id" => $uid,
+                    "link" => $link,
+                    "attachments" => json_encode($currentsAttachment)
                 ],
                 conditions: [
                     "id" => $docId,
@@ -301,7 +378,8 @@ class BookApi
             );
 
             if (!empty($image)) {
-                $temp = $image['tmp_name'];
+                $temp = $image['tmp_name'] ?? false;
+                if (!$temp) throw new Exception("Gagal mengupload file $file[name]!");
                 $target = realpath($this->uploadPath) . "/$docId.webp";
                 if (!file_exists($this->uploadPath)) {
                     mkdir($this->uploadPath);
@@ -311,14 +389,25 @@ class BookApi
                 } else {
                     rename($temp, $target);
                 }
+                chmod($target, 0777);
             }
+
+            $buku = $db->select('daftar_buku', ['*'], ['id' => $docId])['rows'][0];
+            $buku['image'] = $this->getBukuImage($buku['id']);
+            $buku['attachments'] = array_map(function ($path) {
+                $protocol = strpos(strtolower($_SERVER['SERVER_PROTOCOL']), 'https') === FALSE ? 'http' : 'https';
+                $port     = $_SERVER['SERVER_PORT'];
+                $hostLink = $protocol . '://' . $_SERVER['HTTP_HOST'] . (empty($port) || $port === '80' ? '' : ':' . $port);
+                return Path::join($hostLink, $path);
+            }, json_decode($buku['attachments'], true) ?? []);
 
             return [
                 "status"  => true,
                 "message" => "Update berhasil",
-                "data" => $db->select('daftar_buku', ['*'], ['id' => $docId])['rows'][0]
+                "data"    => $buku
             ];
         } catch (Throwable $t) {
+
             $res->setCode(Code::fromCode(intval($t->getCode())) ?? 500);
             return [
                 "status"  => false,
@@ -336,6 +425,7 @@ class BookApi
     )]
     function hapus(Response $res, $docId)
     {
+
         try {
 
             $db = Database::getInstance();
@@ -348,6 +438,17 @@ class BookApi
             if (empty($fetch["rows"])) {
                 throw new Exception("Buku tidak ditemukan!", 404);
             }
+            $attachmentDir = realpath($this->uploadPath) . "/attachments/$docId";
+            if (is_dir($attachmentDir)) {
+                foreach (scandir($attachmentDir) as $file) {
+                    if (file_exists($attachmentDir . "/" . $file))
+                        unlink($attachmentDir . "/" . $file);
+                }
+                unlink($attachmentDir);
+            }
+            $image = realpath($this->uploadPath) . "/$docId.webp";
+            if (file_exists($image))
+                unlink($image);
 
             $db->delete(
                 table: "daftar_buku",
@@ -382,7 +483,8 @@ class BookApi
                 table: "fav_buku F",
                 columns: ["B.*"],
                 conditions: [
-                    "F.user_id" => $userId
+                    "F.user_id" => $userId,
+                    "B.id IS NOT NULL"
                 ],
                 join: [
                     "daftar_buku B" => [
@@ -395,6 +497,12 @@ class BookApi
             $rows = array_map(function ($item) {
                 $item['image'] = $this->getBukuImage($item['id']);
                 $item['is_fav'] = true;
+                $item['attachments'] = array_map(function ($path) {
+                    $protocol = strpos(strtolower($_SERVER['SERVER_PROTOCOL']), 'https') === FALSE ? 'http' : 'https';
+                    $port     = $_SERVER['SERVER_PORT'];
+                    $hostLink = $protocol . '://' . $_SERVER['HTTP_HOST'] . (empty($port) || $port === '80' ? '' : ':' . $port);
+                    return Path::join($hostLink, $path);
+                }, json_decode($item['attachments'], true) ?? []);
                 return $item;
             }, $favs["rows"]);
             $favs['rows'] = $rows;

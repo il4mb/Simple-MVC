@@ -51,6 +51,11 @@ class Database extends PDO
         $lastCondition = null;  // To store the last condition before adding to group
 
         foreach ($conditions as $key => $value) {
+
+            if (is_numeric($key) && is_string($value)) {
+                $conditionStack[] = $value;
+                continue;
+            }
             // Handle OR which indicates the start of a new OR group
             if (strtoupper($value) === "OR") {
                 if ($lastCondition !== null) {

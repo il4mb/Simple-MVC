@@ -24,7 +24,7 @@
         'il4mb/routing' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '10b94bf520371554ea5bd52d9584acc9bb25e14f',
+            'reference' => 'cf175584704278d3abe2da4b12461d47a0553501',
             'type' => 'library',
             'install_path' => __DIR__ . '/../il4mb/routing',
             'aliases' => array(

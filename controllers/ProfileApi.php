@@ -100,9 +100,14 @@ class ProfileApi
                 order: "B.post_date DESC"
             );
             
-
             $rows = array_map(function ($item) {
                 $item['image'] = $this->getBukuImage($item['id']);
+                $item['attachments'] = array_map(function ($path) {
+                    $protocol = strpos(strtolower($_SERVER['SERVER_PROTOCOL']), 'https') === FALSE ? 'http' : 'https';
+                    $port     = $_SERVER['SERVER_PORT'];
+                    $hostLink = $protocol . '://' . $_SERVER['HTTP_HOST'] . (empty($port) || $port === '80' ? '' : ':' . $port);
+                    return Path::join($hostLink, $path);
+                }, json_decode($item['attachments']) ?? []);
                 return $item;
             }, $list_buku["rows"]);
 
