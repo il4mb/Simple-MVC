@@ -218,7 +218,7 @@ class BookApi
                 columns: [
                     "B.*",
                     "CASE 
-                        WHEN f.id IS NOT NULL THEN TRUE 
+                        WHEN F.id IS NOT NULL THEN TRUE 
                         ELSE FALSE 
                     END AS is_fav",
                     "JSON_OBJECT(
