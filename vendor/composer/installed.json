@@ -51,18 +51,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/il4mb/Routing.git",
-                "reference": "ee54f796dca4e024a3d9c60642714507f2258747"
+                "reference": "10b94bf520371554ea5bd52d9584acc9bb25e14f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/il4mb/Routing/zipball/ee54f796dca4e024a3d9c60642714507f2258747",
-                "reference": "ee54f796dca4e024a3d9c60642714507f2258747",
+                "url": "https://api.github.com/repos/il4mb/Routing/zipball/10b94bf520371554ea5bd52d9584acc9bb25e14f",
+                "reference": "10b94bf520371554ea5bd52d9584acc9bb25e14f",
                 "shasum": ""
             },
             "require": {
                 "php": "^8.0"
             },
-            "time": "2025-01-26T12:11:55+00:00",
+            "time": "2025-01-28T07:40:24+00:00",
             "default-branch": true,
             "type": "library",
             "installation-source": "dist",
