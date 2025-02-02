@@ -20,14 +20,8 @@ class InputValidator implements Middleware
 
             $title     = $request->get("judul");
             $description = $request->get("deskripsi");
-            $topik = $request->get("topik");
-
             if (empty($title) || strlen(trim($title)) < 3) {
                 throw new Exception("Judul tidak boleh kosong", 400);
-            }
-
-            if (empty($topik) || strlen(trim($topik)) < 3) {
-                throw new Exception("Topik tidak boleh kosong", 400);
             }
             if (empty($description) || strlen(trim($description)) < 3) {
                 throw new Exception("Deskripsi tidak boleh kosong", 400);
