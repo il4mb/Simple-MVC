@@ -1,0 +1,34 @@
+{
+  "name": "jatatex",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack --config webpack.config.js --mode development --watch",
+    "build": "webpack --config webpack.config.js --mode production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/il4mb/Simple-MVC.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/il4mb/Simple-MVC/issues"
+  },
+  "homepage": "https://github.com/il4mb/Simple-MVC#readme",
+  "description": "",
+  "dependencies": {
+    "@types/react-dom": "^19.0.4",
+    "glob": "^11.0.1",
+    "lodash": "^4.17.21",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "ts-loader": "^9.5.2",
+    "webpack": "^5.98.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.12",
+    "webpack-cli": "^6.0.1"
+  }
+}

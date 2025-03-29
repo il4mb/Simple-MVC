@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>
+			{% block title %}SMVC - Simple Model View Controller
+			{% endblock %}
+		</title>
+		{% block styles %}
+			<link rel="stylesheet" href="{{'/assets/vendor/bootstrap/css/bootstrap.min.css'|assets}}"/>
+			<link rel="stylesheet" href="{{'/assets/vendor/fontawesome/css/all.min.css'|assets}}"/>
+			<link rel="stylesheet" href="{{'/assets/dist/main.css'|assets}}"/>
+		{% endblock %}
+	</head>
+	<body>
+
+		{% block body %}
+			<div id="root" class="vh-100 d-flex align-items-center justify-content-center flex-wrap">
+				{% block content %}
+					<div class="spinner-border" role="status">
+						<span class="visually-hidden">Loading...</span>
+					</div>
+				{% endblock %}
+			</div>
+		{% endblock %}
+
+		<div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+		<script src="/scripts/shared.bundle.js"></script>
+		<script src="/scripts/index.bundle.js"></script>
+		{% block scripts %}{% endblock %}
+	</body>
+</html>
